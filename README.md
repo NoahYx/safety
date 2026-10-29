@@ -12,6 +12,16 @@ Das Projekt entsteht im Rahmen des Praktikums Betriebssicherheit am Institut fü
   - [Zuverlässigkeitsdiagramm](requirements/Zuverlaessigkeitsdiagramm.md)
   - [Binary Decision Diagram](requirements/Binary%20Decision%20Diagram.md)
 
+## Entwicklung
+
+Tech-Stack: React + TypeScript + Vite.
+
+```
+npm install
+npm run dev     # Dev-Server
+npm run build   # Typecheck + Produktions-Build
+```
+
 ## Mitmachen
 
 1. Ein offenes [Issue](https://github.com/derkrembold/safety/issues) aussuchen (oder im [Project-Board](https://github.com/users/derkrembold/projects/3) nachsehen, was noch offen ist).

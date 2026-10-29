@@ -19,6 +19,8 @@ Es soll ein intuitives und modernes Design sein, so ähnlich wie mein Linux (Oma
 ## Plattform
 Die Software soll als Web-App im Browser laufen. Projekte werden lokal als Datei exportiert/importiert; ein Server-Backend ist nicht vorgesehen.
 
+Tech-Stack (entschieden in Issue #1): React + TypeScript + Vite. Projekte werden als JSON-Datei exportiert/importiert (Schema-Version im Feld `version`, siehe `src/project/types.ts`).
+
 ## Priorisierung
 
 Die Reiter werden nacheinander umgesetzt, nicht parallel. Reihenfolge (zeitlich gemeint, nicht fachlich wichtiger):
