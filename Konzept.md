@@ -78,6 +78,7 @@ Als Ticketsystem reicht GitHub Issues zusammen mit einem GitHub-Projects-Board (
 - Der Pull Request referenziert das Issue (z. B. `Closes #12`) und wird erst nach Review durch mich gemerged.
 - Commit-Messages kurz und im Imperativ, bei Bezug auf ein Issue mit Issue-Nummer.
 - Jedes Issue/PR ist eindeutig einem Studenten zugeordnet, zur Nachvollziehbarkeit und Bewertung (ähnlich der Namenskonvention aus den Praktikumsaufgaben).
+- Wer ein Issue bearbeitet, bringt die Testsuite auf den neuesten Stand: neue oder geänderte Funktionalität bekommt passende Tests, bestehende Tests müssen weiterhin grün sein. Ein PR ohne passende Tests wird nicht gemerged.
 
 ### Review-Prozess
 
