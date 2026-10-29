@@ -1,4 +1,4 @@
-import type { ComponentId } from './ids';
+import type { ComponentId } from './ids'
 
 /**
  * A component identity, defined exactly once per project.
@@ -8,14 +8,14 @@ import type { ComponentId } from './ids';
  * rate automatically affects every occurrence in every tab.
  */
 export interface ComponentDefinition {
-  readonly id: ComponentId;
+  readonly id: ComponentId
   /** Display name. Purely cosmetic — renaming never changes the identity. */
-  readonly name: string;
+  readonly name: string
   /** Failure rate lambda in 1/h. Constant (exponential distribution). */
-  readonly failureRate: number;
+  readonly failureRate: number
   /** Repair rate mu in 1/h. Only needed for availability, hence optional. */
-  readonly repairRate?: number;
-  readonly note?: string;
+  readonly repairRate?: number
+  readonly note?: string
 }
 
 /**
@@ -29,17 +29,17 @@ export interface ComponentDefinition {
 
 /** Mean time to failure MTTF = 1/lambda, in hours. */
 export function mttf(component: ComponentDefinition): number {
-  return 1 / component.failureRate;
+  return 1 / component.failureRate
 }
 
 /** Mean time to repair MTTR = 1/mu, in hours; undefined without a repair rate. */
 export function mttr(component: ComponentDefinition): number | undefined {
-  return component.repairRate === undefined ? undefined : 1 / component.repairRate;
+  return component.repairRate === undefined ? undefined : 1 / component.repairRate
 }
 
 /** Reliability R(t) = exp(-lambda * t) of this single component. */
 export function reliability(component: ComponentDefinition, missionTimeHours: number): number {
-  return Math.exp(-component.failureRate * missionTimeHours);
+  return Math.exp(-component.failureRate * missionTimeHours)
 }
 
 /** Failure probability F(t) = 1 - R(t) of this single component. */
@@ -47,7 +47,7 @@ export function failureProbability(
   component: ComponentDefinition,
   missionTimeHours: number,
 ): number {
-  return 1 - reliability(component, missionTimeHours);
+  return 1 - reliability(component, missionTimeHours)
 }
 
 /**
@@ -55,9 +55,9 @@ export function failureProbability(
  * Undefined without a repair rate.
  */
 export function availability(component: ComponentDefinition): number | undefined {
-  const { failureRate, repairRate } = component;
-  if (repairRate === undefined) return undefined;
-  return repairRate / (failureRate + repairRate);
+  const { failureRate, repairRate } = component
+  if (repairRate === undefined) return undefined
+  return repairRate / (failureRate + repairRate)
 }
 
 /**
@@ -69,6 +69,6 @@ export function availability(component: ComponentDefinition): number | undefined
  * by combining per-component averages, which would understate redundant structures.
  */
 export function instantaneousPfd(component: ComponentDefinition, t: number): number {
-  const q = component.failureRate * t;
-  return q < 0 ? 0 : q > 1 ? 1 : q;
+  const q = component.failureRate * t
+  return q < 0 ? 0 : q > 1 ? 1 : q
 }

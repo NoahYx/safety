@@ -1,6 +1,6 @@
-import type { ComponentId } from '../ids';
-import type { LogicExpr } from './expr';
-import { childrenOf, isAnd, isConst, isOr } from './expr';
+import type { ComponentId } from '../ids'
+import type { LogicExpr } from './expr'
+import { childrenOf, isAnd, isConst, isOr } from './expr'
 
 /**
  * Builds {@link LogicExpr} nodes with hash-consing.
@@ -20,90 +20,90 @@ import { childrenOf, isAnd, isConst, isOr } from './expr';
  * — full canonicalisation is the ROBDD's job in issue #6.
  */
 export class ExprBuilder {
-  private readonly interned = new Map<string, LogicExpr>();
-  private readonly keys = new WeakMap<LogicExpr, string>();
+  private readonly interned = new Map<string, LogicExpr>()
+  private readonly keys = new WeakMap<LogicExpr, string>()
 
   /** The constant "system failed". */
-  readonly TRUE: LogicExpr = this.constant(true);
+  readonly TRUE: LogicExpr = this.constant(true)
   /** The constant "system intact". */
-  readonly FALSE: LogicExpr = this.constant(false);
+  readonly FALSE: LogicExpr = this.constant(false)
 
   constant(value: boolean): LogicExpr {
-    return this.intern(`k:${value ? '1' : '0'}`, { kind: 'const', value });
+    return this.intern(`k:${value ? '1' : '0'}`, { kind: 'const', value })
   }
 
   /** The variable "component `component` has failed". */
   var(component: ComponentId): LogicExpr {
-    return this.intern(`v:${component}`, { kind: 'var', component });
+    return this.intern(`v:${component}`, { kind: 'var', component })
   }
 
   /** Failure of all children at once. */
   and(children: readonly LogicExpr[]): LogicExpr {
-    return this.connective('and', children);
+    return this.connective('and', children)
   }
 
   /** Failure of at least one child. */
   or(children: readonly LogicExpr[]): LogicExpr {
-    return this.connective('or', children);
+    return this.connective('or', children)
   }
 
   /** The interning key of an expression built by this builder. */
   keyOf(expr: LogicExpr): string {
-    const key = this.keys.get(expr);
+    const key = this.keys.get(expr)
     if (key === undefined) {
-      throw new Error('Expression was not built by this ExprBuilder');
+      throw new Error('Expression was not built by this ExprBuilder')
     }
-    return key;
+    return key
   }
 
   private connective(kind: 'and' | 'or', children: readonly LogicExpr[]): LogicExpr {
-    const neutral = kind === 'and';
-    const flattened: LogicExpr[] = [];
+    const neutral = kind === 'and'
+    const flattened: LogicExpr[] = []
 
     for (const child of children) {
       // Flatten a nested connective of the same kind: AND(a, AND(b, c)) -> AND(a, b, c).
-      const sameKind = kind === 'and' ? isAnd(child) : isOr(child);
+      const sameKind = kind === 'and' ? isAnd(child) : isOr(child)
       if (sameKind) {
-        flattened.push(...childrenOf(child));
-        continue;
+        flattened.push(...childrenOf(child))
+        continue
       }
       if (isConst(child)) {
         // AND absorbs false, OR absorbs true; the other constant is neutral and dropped.
-        if (child.value !== neutral) return this.constant(child.value);
-        continue;
+        if (child.value !== neutral) return this.constant(child.value)
+        continue
       }
-      flattened.push(child);
+      flattened.push(child)
     }
 
-    const byKey = new Map<string, LogicExpr>();
+    const byKey = new Map<string, LogicExpr>()
     for (const child of flattened) {
-      byKey.set(this.keyOf(child), child);
+      byKey.set(this.keyOf(child), child)
     }
 
-    const sortedKeys = [...byKey.keys()].sort();
-    if (sortedKeys.length === 0) return this.constant(neutral);
+    const sortedKeys = [...byKey.keys()].sort()
+    if (sortedKeys.length === 0) return this.constant(neutral)
 
-    const first = sortedKeys[0];
+    const first = sortedKeys[0]
     if (sortedKeys.length === 1 && first !== undefined) {
-      const only = byKey.get(first);
-      if (only !== undefined) return only;
+      const only = byKey.get(first)
+      if (only !== undefined) return only
     }
 
-    const sorted = sortedKeys.map((key) => byKey.get(key) as LogicExpr);
-    return this.intern(`${kind}:(${sortedKeys.join('|')})`, { kind, children: sorted } as LogicExpr);
+    const sorted = sortedKeys.map((key) => byKey.get(key) as LogicExpr)
+    return this.intern(`${kind}:(${sortedKeys.join('|')})`, { kind, children: sorted } as LogicExpr)
   }
 
   private intern(key: string, candidate: LogicExpr): LogicExpr {
-    const existing = this.interned.get(key);
-    if (existing !== undefined) return existing;
-    const frozen = Object.freeze(candidate);
-    this.interned.set(key, frozen);
-    this.keys.set(frozen, key);
-    return frozen;
+    const existing = this.interned.get(key)
+    if (existing !== undefined) return existing
+    const frozen = Object.freeze(candidate)
+    this.interned.set(key, frozen)
+    this.keys.set(frozen, key)
+    return frozen
   }
 }
 
 /** Convenience factory, so callers do not have to write `new`. */
 export function createExprBuilder(): ExprBuilder {
-  return new ExprBuilder();
+  return new ExprBuilder()
 }

@@ -1,9 +1,9 @@
-import type { ComponentId, EdgeId, NodeId } from './ids';
+import type { ComponentId, EdgeId, NodeId } from './ids'
 
 /** The three representations of one and the same system. */
-export type TabId = 'faultTree' | 'reliabilityBlock' | 'bdd';
+export type TabId = 'fehlerbaum' | 'zuverlaessigkeitsdiagramm' | 'bdd'
 
-export const TAB_IDS: readonly TabId[] = ['faultTree', 'reliabilityBlock', 'bdd'];
+export const TAB_IDS: readonly TabId[] = ['fehlerbaum', 'zuverlaessigkeitsdiagramm', 'bdd']
 
 /**
  * One occurrence of something inside one diagram.
@@ -16,17 +16,17 @@ export const TAB_IDS: readonly TabId[] = ['faultTree', 'reliabilityBlock', 'bdd'
  * identity in the registry — see `ComponentDefinition`.
  */
 export interface DiagramNode<TKind extends string = string> {
-  readonly id: NodeId;
-  readonly kind: TKind;
+  readonly id: NodeId
+  readonly kind: TKind
   /**
    * The component identity this occurrence stands for. Undefined for elements that are
    * not components, e.g. a fault-tree gate or a BDD terminal stub.
    */
-  readonly componentRef?: ComponentId;
+  readonly componentRef?: ComponentId
   /** Optional free-text label shown instead of the component name. */
-  readonly label?: string;
-  readonly failureRate?: never;
-  readonly repairRate?: never;
+  readonly label?: string
+  readonly failureRate?: never
+  readonly repairRate?: never
 }
 
 /**
@@ -38,18 +38,18 @@ export interface DiagramNode<TKind extends string = string> {
  * In every case a node without incoming edges is a root/start node.
  */
 export interface Edge {
-  readonly id: EdgeId;
-  readonly from: NodeId;
-  readonly to: NodeId;
+  readonly id: EdgeId
+  readonly from: NodeId
+  readonly to: NodeId
   /** Port/stub the edge leaves from, e.g. the BDD's "funktioniert"/"ausgefallen" stub. */
-  readonly fromPort?: string;
-  readonly toPort?: string;
-  readonly label?: string;
+  readonly fromPort?: string
+  readonly toPort?: string
+  readonly label?: string
 }
 
 export interface Point {
-  readonly x: number;
-  readonly y: number;
+  readonly x: number
+  readonly y: number
 }
 
 /**
@@ -60,9 +60,9 @@ export interface Point {
  * being replaced by something incomplete (`Konzept.md`).
  */
 export interface Provenance {
-  readonly origin: 'authored' | 'derived';
-  readonly derivedFrom?: TabId;
-  readonly stale: boolean;
+  readonly origin: 'authored' | 'derived'
+  readonly derivedFrom?: TabId
+  readonly stale: boolean
 }
 
 /**
@@ -73,29 +73,29 @@ export interface Provenance {
  * representation, so every derived diagram is laid out automatically.
  */
 export interface DiagramDocument<TKind extends string = string> {
-  readonly nodes: Readonly<Record<string, DiagramNode<TKind>>>;
-  readonly edges: readonly Edge[];
-  readonly layout: Readonly<Record<string, Point>>;
-  readonly provenance: Provenance;
+  readonly nodes: Readonly<Record<string, DiagramNode<TKind>>>
+  readonly edges: readonly Edge[]
+  readonly layout: Readonly<Record<string, Point>>
+  readonly provenance: Provenance
 }
 
 export function emptyDiagram<TKind extends string = string>(
   origin: Provenance['origin'] = 'authored',
 ): DiagramDocument<TKind> {
-  return { nodes: {}, edges: [], layout: {}, provenance: { origin, stale: false } };
+  return { nodes: {}, edges: [], layout: {}, provenance: { origin, stale: false } }
 }
 
 export function getNode<TKind extends string>(
   diagram: DiagramDocument<TKind>,
   id: NodeId,
 ): DiagramNode<TKind> | undefined {
-  return diagram.nodes[id];
+  return diagram.nodes[id]
 }
 
 export function listNodes<TKind extends string>(
   diagram: DiagramDocument<TKind>,
 ): readonly DiagramNode<TKind>[] {
-  return Object.values(diagram.nodes);
+  return Object.values(diagram.nodes)
 }
 
 export function addNode<TKind extends string>(
@@ -107,7 +107,7 @@ export function addNode<TKind extends string>(
     ...diagram,
     nodes: { ...diagram.nodes, [node.id]: node },
     layout: position === undefined ? diagram.layout : { ...diagram.layout, [node.id]: position },
-  };
+  }
 }
 
 /** Removes a node together with its layout entry and every incident edge. */
@@ -115,30 +115,30 @@ export function removeNode<TKind extends string>(
   diagram: DiagramDocument<TKind>,
   id: NodeId,
 ): DiagramDocument<TKind> {
-  const nodes: Record<string, DiagramNode<TKind>> = { ...diagram.nodes };
-  delete nodes[id];
-  const layout: Record<string, Point> = { ...diagram.layout };
-  delete layout[id];
+  const nodes: Record<string, DiagramNode<TKind>> = { ...diagram.nodes }
+  delete nodes[id]
+  const layout: Record<string, Point> = { ...diagram.layout }
+  delete layout[id]
   return {
     ...diagram,
     nodes,
     layout,
     edges: diagram.edges.filter((edge) => edge.from !== id && edge.to !== id),
-  };
+  }
 }
 
 export function addEdge<TKind extends string>(
   diagram: DiagramDocument<TKind>,
   edge: Edge,
 ): DiagramDocument<TKind> {
-  return { ...diagram, edges: [...diagram.edges, edge] };
+  return { ...diagram, edges: [...diagram.edges, edge] }
 }
 
 export function removeEdge<TKind extends string>(
   diagram: DiagramDocument<TKind>,
   id: EdgeId,
 ): DiagramDocument<TKind> {
-  return { ...diagram, edges: diagram.edges.filter((edge) => edge.id !== id) };
+  return { ...diagram, edges: diagram.edges.filter((edge) => edge.id !== id) }
 }
 
 export function setNodePosition<TKind extends string>(
@@ -146,14 +146,14 @@ export function setNodePosition<TKind extends string>(
   id: NodeId,
   position: Point,
 ): DiagramDocument<TKind> {
-  return { ...diagram, layout: { ...diagram.layout, [id]: position } };
+  return { ...diagram, layout: { ...diagram.layout, [id]: position } }
 }
 
 export function withProvenance<TKind extends string>(
   diagram: DiagramDocument<TKind>,
   provenance: Provenance,
 ): DiagramDocument<TKind> {
-  return { ...diagram, provenance };
+  return { ...diagram, provenance }
 }
 
 /** Marks a derived diagram as outdated without discarding it. */
@@ -161,7 +161,7 @@ export function markStale<TKind extends string>(
   diagram: DiagramDocument<TKind>,
   stale = true,
 ): DiagramDocument<TKind> {
-  return { ...diagram, provenance: { ...diagram.provenance, stale } };
+  return { ...diagram, provenance: { ...diagram.provenance, stale } }
 }
 
 /** Successors of a node, i.e. the targets of its outgoing edges. */
@@ -169,30 +169,30 @@ export function successorsOf<TKind extends string>(
   diagram: DiagramDocument<TKind>,
   id: NodeId,
 ): readonly NodeId[] {
-  return diagram.edges.filter((edge) => edge.from === id).map((edge) => edge.to);
+  return diagram.edges.filter((edge) => edge.from === id).map((edge) => edge.to)
 }
 
 export function predecessorsOf<TKind extends string>(
   diagram: DiagramDocument<TKind>,
   id: NodeId,
 ): readonly NodeId[] {
-  return diagram.edges.filter((edge) => edge.to === id).map((edge) => edge.from);
+  return diagram.edges.filter((edge) => edge.to === id).map((edge) => edge.from)
 }
 
 /** Nodes without incoming edges: the fault tree's TOP, the block diagram's start. */
 export function rootNodes<TKind extends string>(
   diagram: DiagramDocument<TKind>,
 ): readonly DiagramNode<TKind>[] {
-  const hasIncoming = new Set<string>(diagram.edges.map((edge) => edge.to));
-  return listNodes(diagram).filter((node) => !hasIncoming.has(node.id));
+  const hasIncoming = new Set<string>(diagram.edges.map((edge) => edge.to))
+  return listNodes(diagram).filter((node) => !hasIncoming.has(node.id))
 }
 
 /** Nodes without outgoing edges: basic events, respectively BDD terminal stubs. */
 export function leafNodes<TKind extends string>(
   diagram: DiagramDocument<TKind>,
 ): readonly DiagramNode<TKind>[] {
-  const hasOutgoing = new Set<string>(diagram.edges.map((edge) => edge.from));
-  return listNodes(diagram).filter((node) => !hasOutgoing.has(node.id));
+  const hasOutgoing = new Set<string>(diagram.edges.map((edge) => edge.from))
+  return listNodes(diagram).filter((node) => !hasOutgoing.has(node.id))
 }
 
 /**
@@ -207,16 +207,16 @@ export function occurrencesOf<TKind extends string>(
 ): readonly NodeId[] {
   return listNodes(diagram)
     .filter((node) => node.componentRef === component)
-    .map((node) => node.id);
+    .map((node) => node.id)
 }
 
 /** All distinct component identities referenced by this diagram. */
 export function referencedComponents<TKind extends string>(
   diagram: DiagramDocument<TKind>,
 ): readonly ComponentId[] {
-  const seen = new Set<ComponentId>();
+  const seen = new Set<ComponentId>()
   for (const node of listNodes(diagram)) {
-    if (node.componentRef !== undefined) seen.add(node.componentRef);
+    if (node.componentRef !== undefined) seen.add(node.componentRef)
   }
-  return [...seen].sort((a, b) => a.localeCompare(b));
+  return [...seen].sort((a, b) => a.localeCompare(b))
 }

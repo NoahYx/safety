@@ -1,4 +1,4 @@
-import type { ComponentId } from '../ids';
+import type { ComponentId } from '../ids'
 
 /**
  * Representation-independent logic: the one semantic core all three tabs share.
@@ -27,34 +27,34 @@ import type { ComponentId } from '../ids';
  * component visible as a shared node, which is the precondition for computing correct
  * system probabilities over the BDD (issue #6).
  */
-export type LogicExpr = LogicVar | LogicAnd | LogicOr | LogicConst;
+export type LogicExpr = LogicVar | LogicAnd | LogicOr | LogicConst
 
 export interface LogicVar {
-  readonly kind: 'var';
-  readonly component: ComponentId;
+  readonly kind: 'var'
+  readonly component: ComponentId
 }
 
 export interface LogicAnd {
-  readonly kind: 'and';
-  readonly children: readonly LogicExpr[];
+  readonly kind: 'and'
+  readonly children: readonly LogicExpr[]
 }
 
 export interface LogicOr {
-  readonly kind: 'or';
-  readonly children: readonly LogicExpr[];
+  readonly kind: 'or'
+  readonly children: readonly LogicExpr[]
 }
 
 export interface LogicConst {
-  readonly kind: 'const';
-  readonly value: boolean;
+  readonly kind: 'const'
+  readonly value: boolean
 }
 
-export const isVar = (expr: LogicExpr): expr is LogicVar => expr.kind === 'var';
-export const isAnd = (expr: LogicExpr): expr is LogicAnd => expr.kind === 'and';
-export const isOr = (expr: LogicExpr): expr is LogicOr => expr.kind === 'or';
-export const isConst = (expr: LogicExpr): expr is LogicConst => expr.kind === 'const';
+export const isVar = (expr: LogicExpr): expr is LogicVar => expr.kind === 'var'
+export const isAnd = (expr: LogicExpr): expr is LogicAnd => expr.kind === 'and'
+export const isOr = (expr: LogicExpr): expr is LogicOr => expr.kind === 'or'
+export const isConst = (expr: LogicExpr): expr is LogicConst => expr.kind === 'const'
 
 /** Children of a connective; the empty list for variables and constants. */
 export function childrenOf(expr: LogicExpr): readonly LogicExpr[] {
-  return isAnd(expr) || isOr(expr) ? expr.children : [];
+  return isAnd(expr) || isOr(expr) ? expr.children : []
 }
