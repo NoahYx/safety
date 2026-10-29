@@ -1,4 +1,5 @@
 import type { ComponentDefinition } from './component'
+import { dictFrom, dictGet, dictHas, dictOmit, emptyDict } from './dict'
 import type { ComponentId } from './ids'
 
 /**
@@ -13,14 +14,14 @@ export type ComponentRegistry = Readonly<Record<string, ComponentDefinition>>
 export type ComponentPatch = Readonly<Partial<Omit<ComponentDefinition, 'id'>>>
 
 export function emptyRegistry(): ComponentRegistry {
-  return {}
+  return emptyDict<ComponentDefinition>()
 }
 
 export function getComponent(
   registry: ComponentRegistry,
   id: ComponentId,
 ): ComponentDefinition | undefined {
-  return registry[id]
+  return dictGet(registry, id)
 }
 
 /** Like {@link getComponent}, but throws when the identity is unknown. */
@@ -28,7 +29,7 @@ export function requireComponent(
   registry: ComponentRegistry,
   id: ComponentId,
 ): ComponentDefinition {
-  const component = registry[id]
+  const component = dictGet(registry, id)
   if (component === undefined) {
     throw new Error(`Unknown component identity: ${id}`)
   }
@@ -36,7 +37,7 @@ export function requireComponent(
 }
 
 export function hasComponent(registry: ComponentRegistry, id: ComponentId): boolean {
-  return Object.prototype.hasOwnProperty.call(registry, id)
+  return dictHas(registry, id)
 }
 
 /** All definitions, ordered by name and then id so the order is stable across runs. */
@@ -55,7 +56,7 @@ export function putComponent(
   registry: ComponentRegistry,
   component: ComponentDefinition,
 ): ComponentRegistry {
-  return { ...registry, [component.id]: component }
+  return dictFrom(registry, { [component.id]: component })
 }
 
 /**
@@ -68,7 +69,7 @@ export function updateComponent(
   patch: ComponentPatch,
 ): ComponentRegistry {
   const current = requireComponent(registry, id)
-  return { ...registry, [id]: { ...current, ...patch, id } }
+  return dictFrom(registry, { [id]: { ...current, ...patch, id } })
 }
 
 /**
@@ -80,7 +81,5 @@ export function removeComponent(
   id: ComponentId,
 ): ComponentRegistry {
   if (!hasComponent(registry, id)) return registry
-  const next: Record<string, ComponentDefinition> = { ...registry }
-  delete next[id]
-  return next
+  return dictOmit(registry, id)
 }

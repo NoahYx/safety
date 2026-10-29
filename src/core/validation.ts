@@ -4,6 +4,7 @@ import type { ComponentId, EdgeId, NodeId } from './ids'
 import type { Project, ProjectParameters } from './project'
 import { orphanedComponents } from './project'
 import type { ComponentDefinition } from './component'
+import { dictGet, dictHas } from './dict'
 import type { ComponentRegistry } from './registry'
 
 export type Severity = 'error' | 'warning'
@@ -109,7 +110,7 @@ export function validateComponentRefs(
   for (const node of listNodes(diagram)) {
     const ref = node.componentRef
     if (ref === undefined) continue
-    if (!Object.prototype.hasOwnProperty.call(registry, ref)) {
+    if (!dictHas(registry, ref)) {
       issues.push({
         severity: 'error',
         code: 'UNKNOWN_COMPONENT_REF',
@@ -141,8 +142,8 @@ export function validateGraphStructure(
 
   for (const edge of diagram.edges) {
     const missing: NodeId[] = []
-    if (diagram.nodes[edge.from] === undefined) missing.push(edge.from)
-    if (diagram.nodes[edge.to] === undefined) missing.push(edge.to)
+    if (!dictHas(diagram.nodes, edge.from)) missing.push(edge.from)
+    if (!dictHas(diagram.nodes, edge.to)) missing.push(edge.to)
     if (missing.length > 0) {
       issues.push({
         severity: 'error',
@@ -198,7 +199,7 @@ export function validateGraphStructure(
 export function findCycle(diagram: DiagramDocument): readonly NodeId[] | undefined {
   const successors = new Map<string, NodeId[]>()
   for (const edge of diagram.edges) {
-    if (diagram.nodes[edge.from] === undefined || diagram.nodes[edge.to] === undefined) continue
+    if (!dictHas(diagram.nodes, edge.from) || !dictHas(diagram.nodes, edge.to)) continue
     const list = successors.get(edge.from)
     if (list === undefined) successors.set(edge.from, [edge.to])
     else list.push(edge.to)
@@ -266,7 +267,7 @@ export function validateProject(project: Project): readonly ValidationIssue[] {
   }
 
   for (const id of orphanedComponents(project)) {
-    const component = project.components[id]
+    const component = dictGet(project.components, id)
     issues.push({
       severity: 'warning',
       code: 'ORPHANED_COMPONENT',

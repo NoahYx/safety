@@ -11,6 +11,7 @@ import {
   structuralEquals,
   variablesOf,
 } from './logic/inspect'
+import { asComponentId } from './ids'
 import { SENSOR, VALVE_A, VALVE_B } from './fixtures'
 
 describe('expression builder', () => {
@@ -56,6 +57,33 @@ describe('expression builder', () => {
     expect(isConst(b.and([]))).toBe(true)
     expect(b.and([])).toBe(b.TRUE)
     expect(b.or([])).toBe(b.FALSE)
+  })
+
+  it('keeps expressions apart when an id contains key separators', () => {
+    // Ids are arbitrary strings after an import. A key built by joining parts with a
+    // separator would let these two expressions collide, and interning would then hand
+    // back the wrong node — changing the system's logic silently.
+    const b = createExprBuilder()
+    const plain = b.and([
+      b.var(asComponentId('a')),
+      b.var(asComponentId('b')),
+      b.var(asComponentId('c')),
+    ])
+    const crafted = b.and([b.var(asComponentId('a|v:b')), b.var(asComponentId('c'))])
+
+    expect(plain).not.toBe(crafted)
+    expect(variablesOf(crafted)).toEqual(['a|v:b', 'c'])
+    expect(evaluate(crafted, assignmentOf({ 'a|v:b': true, c: true }))).toBe(true)
+    expect(evaluate(plain, assignmentOf({ 'a|v:b': true, c: true }))).toBe(false)
+  })
+
+  it('keeps expressions apart when an id contains quotes or backslashes', () => {
+    const b = createExprBuilder()
+    const first = b.and([b.var(asComponentId('x"y')), b.var(asComponentId('z'))])
+    const second = b.and([b.var(asComponentId('x')), b.var(asComponentId('y"z'))])
+
+    expect(first).not.toBe(second)
+    expect(b.var(asComponentId('a\\b'))).not.toBe(b.var(asComponentId('a\\\\b')))
   })
 
   it('rejects expressions from a different builder', () => {

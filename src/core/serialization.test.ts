@@ -91,6 +91,47 @@ describe('parseProject', () => {
     expect(restored.parameters).toEqual(DEFAULT_PARAMETERS)
   })
 
+  it('keeps a component whose id is __proto__', () => {
+    // JSON.parse creates `__proto__` as an own property, so such an id really can reach
+    // the parser. Assigning it into an ordinary object would hit the inherited setter
+    // and drop the component without any error.
+    const json = JSON.stringify({
+      version: 1,
+      name: 'Proto',
+      createdAt: '2026-01-01T00:00:00.000Z',
+      modifiedAt: '2026-01-01T00:00:00.000Z',
+      components: { placeholder: { id: 'placeholder', name: 'Sensor', failureRate: 1e-4 } },
+    }).replaceAll('placeholder', '__proto__')
+
+    const restored = fromJSON(json)
+    expect(Object.keys(restored.components)).toEqual(['__proto__'])
+    expect(restored.components['__proto__']?.name).toBe('Sensor')
+
+    // ... and it survives the export again, instead of vanishing on the way out.
+    expect(Object.keys(serializeProject(restored).components)).toEqual(['__proto__'])
+  })
+
+  it('keeps a node whose id is __proto__', () => {
+    const json = JSON.stringify({
+      version: 1,
+      name: 'Proto',
+      createdAt: '2026-01-01T00:00:00.000Z',
+      modifiedAt: '2026-01-01T00:00:00.000Z',
+      diagrams: {
+        fehlerbaum: {
+          nodes: { placeholder: { id: 'placeholder', kind: 'or' } },
+          edges: [],
+          layout: { placeholder: { x: 1, y: 2 } },
+          provenance: { origin: 'authored', stale: false },
+        },
+      },
+    }).replaceAll('placeholder', '__proto__')
+
+    const diagram = fromJSON(json).diagrams.fehlerbaum
+    expect(Object.keys(diagram?.nodes ?? {})).toEqual(['__proto__'])
+    expect(Object.keys(diagram?.layout ?? {})).toEqual(['__proto__'])
+  })
+
   it('rejects an unknown schema version instead of guessing', () => {
     const file = { ...serializeProject(sharedSensorProject()), version: 99 }
     expect(() => parseProject(file)).toThrow(SchemaVersionError)

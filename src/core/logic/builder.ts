@@ -18,6 +18,12 @@ import { childrenOf, isAnd, isConst, isOr } from './expr'
  * constants are folded away, and children are sorted by their interning key so argument
  * order does not matter. Absorption (`x AND (x OR y) = x`) is deliberately *not* applied
  * — full canonicalisation is the ROBDD's job in issue #6.
+ *
+ * Interning keys are JSON-encoded tuples rather than concatenated strings. Component ids
+ * are arbitrary strings after an import, so a separator-joined key would let an id that
+ * contains the separator collide with a different expression — and interning would then
+ * hand back the wrong node, silently changing the system's logic. JSON encoding escapes
+ * the parts, which makes the key injective for any id.
  */
 export class ExprBuilder {
   private readonly interned = new Map<string, LogicExpr>()
@@ -29,12 +35,12 @@ export class ExprBuilder {
   readonly FALSE: LogicExpr = this.constant(false)
 
   constant(value: boolean): LogicExpr {
-    return this.intern(`k:${value ? '1' : '0'}`, { kind: 'const', value })
+    return this.intern(JSON.stringify(['const', value]), { kind: 'const', value })
   }
 
   /** The variable "component `component` has failed". */
   var(component: ComponentId): LogicExpr {
-    return this.intern(`v:${component}`, { kind: 'var', component })
+    return this.intern(JSON.stringify(['var', component]), { kind: 'var', component })
   }
 
   /** Failure of all children at once. */
@@ -90,7 +96,10 @@ export class ExprBuilder {
     }
 
     const sorted = sortedKeys.map((key) => byKey.get(key) as LogicExpr)
-    return this.intern(`${kind}:(${sortedKeys.join('|')})`, { kind, children: sorted } as LogicExpr)
+    return this.intern(JSON.stringify([kind, sortedKeys]), {
+      kind,
+      children: sorted,
+    } as LogicExpr)
   }
 
   private intern(key: string, candidate: LogicExpr): LogicExpr {

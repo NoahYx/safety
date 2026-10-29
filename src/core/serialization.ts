@@ -1,6 +1,7 @@
 import type { ComponentDefinition } from './component'
 import type { DiagramDocument, DiagramNode, Edge, Point, Provenance, TabId } from './diagram'
 import { TAB_IDS } from './diagram'
+import { emptyDict } from './dict'
 import { asComponentId, asEdgeId, asNodeId } from './ids'
 import type { Project, ProjectParameters } from './project'
 import { DEFAULT_PARAMETERS, PROJECT_VERSION } from './project'
@@ -60,7 +61,7 @@ export function toJSON(project: Project, indent = 2): string {
 }
 
 function serializeRegistry(registry: ComponentRegistry): ComponentRegistry {
-  const result: Record<string, ComponentDefinition> = {}
+  const result = emptyDict<ComponentDefinition>()
   for (const component of Object.values(registry)) {
     result[component.id] = {
       id: component.id,
@@ -74,7 +75,7 @@ function serializeRegistry(registry: ComponentRegistry): ComponentRegistry {
 }
 
 function serializeDiagram(diagram: DiagramDocument): DiagramDocument {
-  const nodes: Record<string, DiagramNode> = {}
+  const nodes = emptyDict<DiagramNode>()
   for (const node of Object.values(diagram.nodes)) {
     nodes[node.id] = {
       id: node.id,
@@ -84,7 +85,7 @@ function serializeDiagram(diagram: DiagramDocument): DiagramDocument {
     }
   }
 
-  const layout: Record<string, Point> = {}
+  const layout = emptyDict<Point>()
   for (const [id, point] of Object.entries(diagram.layout)) {
     layout[id] = { x: point.x, y: point.y }
   }
@@ -158,7 +159,7 @@ export function parseProject(input: unknown): Project {
 
   const components =
     raw.components === undefined
-      ? {}
+      ? emptyDict<ComponentDefinition>()
       : parseRegistry(record(raw.components, 'project.components'))
 
   const diagrams: Partial<Record<TabId, DiagramDocument>> = {}
@@ -194,7 +195,7 @@ function parseParameters(raw: Record<string, unknown>): ProjectParameters {
 }
 
 function parseRegistry(raw: Record<string, unknown>): ComponentRegistry {
-  const registry: Record<string, ComponentDefinition> = {}
+  const registry = emptyDict<ComponentDefinition>()
   for (const [key, value] of Object.entries(raw)) {
     const component = record(value, `project.components.${key}`)
     const id = asComponentId(str(component.id, `project.components.${key}.id`))
@@ -217,7 +218,7 @@ function parseDiagram(raw: Record<string, unknown>, tab: TabId): DiagramDocument
   const rawLayout = raw.layout === undefined ? {} : record(raw.layout, `${path}.layout`)
   const rawProvenance = record(raw.provenance, `${path}.provenance`)
 
-  const nodes: Record<string, DiagramNode> = {}
+  const nodes = emptyDict<DiagramNode>()
   for (const [key, value] of Object.entries(rawNodes)) {
     const node = record(value, `${path}.nodes.${key}`)
     const id = asNodeId(str(node.id, `${path}.nodes.${key}.id`))
@@ -249,7 +250,7 @@ function parseDiagram(raw: Record<string, unknown>, tab: TabId): DiagramDocument
     }
   })
 
-  const layout: Record<string, Point> = {}
+  const layout = emptyDict<Point>()
   for (const [key, value] of Object.entries(rawLayout)) {
     const point = record(value, `${path}.layout.${key}`)
     layout[key] = {

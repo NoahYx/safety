@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { getComponent, listComponents, updateComponent } from './registry'
+import {
+  emptyRegistry,
+  getComponent,
+  hasComponent,
+  listComponents,
+  putComponent,
+  removeComponent,
+  updateComponent,
+} from './registry'
 import {
   orphanedComponents,
   patchProjectComponent,
@@ -55,6 +63,19 @@ describe('component identity', () => {
 
     expect(referencedComponents(diagram)).toHaveLength(3)
     expect(listComponents(project.components)).toHaveLength(3)
+  })
+
+  it('treats a reserved key as an ordinary identity', () => {
+    const reserved = asComponentId('__proto__')
+
+    // A lookup that finds nothing must say so, not hand back the object prototype.
+    expect(getComponent(emptyRegistry(), reserved)).toBeUndefined()
+    expect(hasComponent(emptyRegistry(), reserved)).toBe(false)
+
+    const registry = putComponent(emptyRegistry(), component(reserved, 'Sensor', 1e-5))
+    expect(getComponent(registry, reserved)?.name).toBe('Sensor')
+    expect(listComponents(registry)).toHaveLength(1)
+    expect(Object.keys(removeComponent(registry, reserved))).toEqual([])
   })
 
   it('reports a defined but unused identity as orphaned', () => {

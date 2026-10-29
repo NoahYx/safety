@@ -1,3 +1,4 @@
+import { dictFrom, dictGet, dictOmit, emptyDict } from './dict'
 import type { ComponentId, EdgeId, NodeId } from './ids'
 
 /** The three representations of one and the same system. */
@@ -82,14 +83,19 @@ export interface DiagramDocument<TKind extends string = string> {
 export function emptyDiagram<TKind extends string = string>(
   origin: Provenance['origin'] = 'authored',
 ): DiagramDocument<TKind> {
-  return { nodes: {}, edges: [], layout: {}, provenance: { origin, stale: false } }
+  return {
+    nodes: emptyDict<DiagramNode<TKind>>(),
+    edges: [],
+    layout: emptyDict<Point>(),
+    provenance: { origin, stale: false },
+  }
 }
 
 export function getNode<TKind extends string>(
   diagram: DiagramDocument<TKind>,
   id: NodeId,
 ): DiagramNode<TKind> | undefined {
-  return diagram.nodes[id]
+  return dictGet(diagram.nodes, id)
 }
 
 export function listNodes<TKind extends string>(
@@ -105,8 +111,11 @@ export function addNode<TKind extends string>(
 ): DiagramDocument<TKind> {
   return {
     ...diagram,
-    nodes: { ...diagram.nodes, [node.id]: node },
-    layout: position === undefined ? diagram.layout : { ...diagram.layout, [node.id]: position },
+    nodes: dictFrom(diagram.nodes, { [node.id]: node }),
+    layout:
+      position === undefined
+        ? diagram.layout
+        : dictFrom(diagram.layout, { [node.id]: position }),
   }
 }
 
@@ -115,14 +124,10 @@ export function removeNode<TKind extends string>(
   diagram: DiagramDocument<TKind>,
   id: NodeId,
 ): DiagramDocument<TKind> {
-  const nodes: Record<string, DiagramNode<TKind>> = { ...diagram.nodes }
-  delete nodes[id]
-  const layout: Record<string, Point> = { ...diagram.layout }
-  delete layout[id]
   return {
     ...diagram,
-    nodes,
-    layout,
+    nodes: dictOmit(diagram.nodes, id),
+    layout: dictOmit(diagram.layout, id),
     edges: diagram.edges.filter((edge) => edge.from !== id && edge.to !== id),
   }
 }
@@ -146,7 +151,7 @@ export function setNodePosition<TKind extends string>(
   id: NodeId,
   position: Point,
 ): DiagramDocument<TKind> {
-  return { ...diagram, layout: { ...diagram.layout, [id]: position } }
+  return { ...diagram, layout: dictFrom(diagram.layout, { [id]: position }) }
 }
 
 export function withProvenance<TKind extends string>(
